@@ -61,7 +61,7 @@ describe("plugin definition", () => {
     plugin.register(api);
 
     expect(api.registerChannel).toHaveBeenCalledOnce();
-    expect(api.registerTool).toHaveBeenCalledTimes(8);
+    expect(api.registerTool).toHaveBeenCalledTimes(9);
     expect(api.registerTool).toHaveBeenCalledWith(
       expect.objectContaining({ name: "uniclaw_send_message" }),
       expect.objectContaining({ name: "uniclaw_send_message", optional: true }),
@@ -123,6 +123,7 @@ describe("plugin definition", () => {
     expect(result.prependContext).toContain("uniclaw_send_message");
     expect(result.prependContext).toContain("uniclaw_get_balance");
     expect(result.prependContext).toContain("uniclaw_send_tokens");
+    expect(result.prependContext).toContain("uniclaw_top_up");
     expect(result.prependContext).toContain("Never send tokens or pay payment requests unless explicitly instructed");
     expect(result.prependContext).toContain("Never reveal your mnemonic");
   });

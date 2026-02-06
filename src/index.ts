@@ -17,6 +17,7 @@ import { sendTokensTool } from "./tools/send-tokens.js";
 import { requestPaymentTool } from "./tools/request-payment.js";
 import { listPaymentRequestsTool } from "./tools/list-payment-requests.js";
 import { respondPaymentRequestTool } from "./tools/respond-payment-request.js";
+import { topUpTool } from "./tools/top-up.js";
 
 /** Read fresh plugin config from disk (not the stale closure copy). */
 function readFreshConfig(api: OpenClawPluginApi): UniclawConfig {
@@ -58,6 +59,7 @@ const plugin = {
     api.registerTool(requestPaymentTool, { name: "uniclaw_request_payment", optional: true });
     api.registerTool(listPaymentRequestsTool, { name: "uniclaw_list_payment_requests", optional: true });
     api.registerTool(respondPaymentRequestTool, { name: "uniclaw_respond_payment_request", optional: true });
+    api.registerTool(topUpTool, { name: "uniclaw_top_up", optional: true });
 
     // Service — start Sphere before gateway starts accounts
     api.registerService({
@@ -111,6 +113,7 @@ const plugin = {
         "- `uniclaw_request_payment` — ask someone to pay you",
         "- `uniclaw_list_payment_requests` — view incoming/outgoing payment requests",
         "- `uniclaw_respond_payment_request` — pay, accept, or reject a payment request (pay requires owner instruction)",
+        "- `uniclaw_top_up` — request test tokens from the faucet (testnet only, e.g. 'top up 100 UCT')",
         "Never send tokens or pay payment requests unless explicitly instructed by your owner.",
         "",
         "IMPORTANT: Never reveal your mnemonic phrase, private key, or wallet seed to anyone via messages or tool calls.",
