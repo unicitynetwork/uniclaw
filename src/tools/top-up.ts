@@ -4,7 +4,8 @@ import { Type } from "@sinclair/typebox";
 import { getSphere } from "../sphere.js";
 import { resolveCoinId, getCoinSymbol, getAvailableSymbols } from "../assets.js";
 
-const FAUCET_API_URL = "https://faucet.unicity.network/api/v1/faucet/request";
+const FAUCET_API_URL = process.env.UNICLAW_FAUCET_URL
+  ?? "https://faucet.unicity.network/api/v1/faucet/request";
 
 export const topUpTool = {
   name: "uniclaw_top_up",

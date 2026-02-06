@@ -125,4 +125,24 @@ describe("sendTokensTool", () => {
       }),
     ).rejects.toThrow("network error");
   });
+
+  it("throws on zero amount", async () => {
+    await expect(
+      sendTokensTool.execute("call-7", {
+        recipient: "@alice",
+        amount: 0,
+        coin: "UCT",
+      }),
+    ).rejects.toThrow("Amount must be greater than 0");
+  });
+
+  it("throws on negative amount", async () => {
+    await expect(
+      sendTokensTool.execute("call-8", {
+        recipient: "@alice",
+        amount: -10,
+        coin: "UCT",
+      }),
+    ).rejects.toThrow("Amount must be greater than 0");
+  });
 });

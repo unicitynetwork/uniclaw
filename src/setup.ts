@@ -1,13 +1,12 @@
 /** Shared interactive setup logic for Uniclaw plugin configuration. */
 
 import type { WizardPrompter } from "openclaw/plugin-sdk";
+import { NAMETAG_REGEX } from "./validation.js";
 
 export type SetupRuntime = {
   loadConfig: () => Record<string, unknown>;
   writeConfigFile: (cfg: Record<string, unknown>) => Promise<void>;
 };
-
-const NAMETAG_REGEX = /^[a-zA-Z][a-zA-Z0-9_-]{0,31}$/;
 
 export async function runInteractiveSetup(
   prompter: WizardPrompter,

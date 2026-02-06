@@ -105,4 +105,24 @@ describe("requestPaymentTool", () => {
       }),
     ).rejects.toThrow("relay error");
   });
+
+  it("throws on zero amount", async () => {
+    await expect(
+      requestPaymentTool.execute("call-6", {
+        recipient: "@alice",
+        amount: 0,
+        coin: "UCT",
+      }),
+    ).rejects.toThrow("Amount must be greater than 0");
+  });
+
+  it("throws on negative amount", async () => {
+    await expect(
+      requestPaymentTool.execute("call-7", {
+        recipient: "@alice",
+        amount: -5,
+        coin: "UCT",
+      }),
+    ).rejects.toThrow("Amount must be greater than 0");
+  });
 });

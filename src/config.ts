@@ -1,5 +1,7 @@
 /** Uniclaw plugin configuration schema and helpers. */
 
+import { NAMETAG_REGEX } from "./validation.js";
+
 export type UnicityNetwork = "testnet" | "mainnet" | "dev";
 
 export type UniclawConfig = {
@@ -18,8 +20,10 @@ export function resolveUniclawConfig(raw: Record<string, unknown> | undefined): 
   const network = typeof cfg.network === "string" && VALID_NETWORKS.has(cfg.network)
     ? (cfg.network as UnicityNetwork)
     : "testnet";
-  const nametag = typeof cfg.nametag === "string" ? cfg.nametag : undefined;
-  const owner = typeof cfg.owner === "string" ? cfg.owner.replace(/^@/, "").trim() || undefined : undefined;
+  const rawNametag = typeof cfg.nametag === "string" ? cfg.nametag.replace(/^@/, "").trim() : undefined;
+  const nametag = rawNametag && NAMETAG_REGEX.test(rawNametag) ? rawNametag : undefined;
+  const rawOwner = typeof cfg.owner === "string" ? cfg.owner.replace(/^@/, "").trim() : undefined;
+  const owner = rawOwner && NAMETAG_REGEX.test(rawOwner) ? rawOwner : undefined;
   const additionalRelays = Array.isArray(cfg.additionalRelays)
     ? cfg.additionalRelays.filter((r): r is string => typeof r === "string")
     : undefined;

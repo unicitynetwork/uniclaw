@@ -3,8 +3,7 @@
 import { Type } from "@sinclair/typebox";
 import { getSphere } from "../sphere.js";
 import { resolveCoinId, getCoinSymbol, getCoinDecimals, toSmallestUnit } from "../assets.js";
-
-const VALID_RECIPIENT = /^@?\w[\w-]{0,31}$|^[0-9a-fA-F]{64}$/;
+import { validateRecipient } from "../validation.js";
 
 export const requestPaymentTool = {
   name: "uniclaw_request_payment",
@@ -21,10 +20,10 @@ export const requestPaymentTool = {
     params: { recipient: string; amount: number; coin: string; message?: string },
   ) {
     const recipient = params.recipient.trim();
-    if (!VALID_RECIPIENT.test(recipient)) {
-      throw new Error(
-        `Invalid recipient format: "${params.recipient}". Expected a nametag or 64-char hex public key.`,
-      );
+    validateRecipient(recipient);
+
+    if (params.amount <= 0) {
+      throw new Error("Amount must be greater than 0.");
     }
 
     const coinId = resolveCoinId(params.coin);

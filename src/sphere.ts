@@ -11,7 +11,8 @@ export const DATA_DIR = join(homedir(), ".openclaw", "unicity");
 const TOKENS_DIR = join(DATA_DIR, "tokens");
 export const MNEMONIC_PATH = join(DATA_DIR, "mnemonic.txt");
 const TRUSTBASE_PATH = join(DATA_DIR, "trustbase.json");
-const TRUSTBASE_URL = "https://raw.githubusercontent.com/unicitynetwork/unicity-ids/refs/heads/main/bft-trustbase.testnet.json";
+const TRUSTBASE_URL = process.env.UNICLAW_TRUSTBASE_URL
+  ?? "https://raw.githubusercontent.com/unicitynetwork/unicity-ids/refs/heads/main/bft-trustbase.testnet.json";
 
 /** Default testnet API key (from Sphere app) */
 const DEFAULT_API_KEY = "sk_06365a9c44654841a366068bcfc68986";
@@ -151,8 +152,8 @@ async function doInitSphere(
     }
   }
 
-  // Send greeting DM to owner if configured
-  if (cfg.owner) {
+  // Send greeting DM to owner on first wallet creation
+  if (cfg.owner && result.created) {
     const log = logger ?? console;
     const myNametag = result.sphere.identity?.nametag ?? "unknown";
     const greeting = `I'm online, master! I am @${myNametag}. What can I do for you?`;
@@ -183,9 +184,17 @@ export function getSphereOrNull(): Sphere | null {
 }
 
 /** Wait for sphere initialization (even if it hasn't started yet). */
-export function waitForSphere(): Promise<Sphere | null> {
+export function waitForSphere(timeoutMs = 30_000): Promise<Sphere | null> {
   if (sphereInstance) return Promise.resolve(sphereInstance);
-  return sphereReady.promise;
+  return Promise.race([
+    sphereReady.promise,
+    new Promise<Sphere | null>((_, reject) =>
+      setTimeout(
+        () => reject(new Error(`[uniclaw] Sphere initialization timed out after ${timeoutMs}ms`)),
+        timeoutMs,
+      ),
+    ),
+  ]);
 }
 
 /** Resolve the sphere-ready deferred to null (for tests). */

@@ -62,4 +62,31 @@ describe("resolveUniclawConfig", () => {
     expect(resolveUniclawConfig({ owner: "" }).owner).toBeUndefined();
     expect(resolveUniclawConfig({ owner: " " }).owner).toBeUndefined();
   });
+
+  it("strips nametag starting with a number", () => {
+    expect(resolveUniclawConfig({ nametag: "1badname" }).nametag).toBeUndefined();
+  });
+
+  it("strips nametag with special characters", () => {
+    expect(resolveUniclawConfig({ nametag: "bad@name!" }).nametag).toBeUndefined();
+  });
+
+  it("strips nametag exceeding 32 chars", () => {
+    expect(resolveUniclawConfig({ nametag: "a".repeat(33) }).nametag).toBeUndefined();
+  });
+
+  it("accepts valid nametag formats", () => {
+    expect(resolveUniclawConfig({ nametag: "mybot" }).nametag).toBe("mybot");
+    expect(resolveUniclawConfig({ nametag: "My-Bot_01" }).nametag).toBe("My-Bot_01");
+    expect(resolveUniclawConfig({ nametag: "a" }).nametag).toBe("a");
+  });
+
+  it("strips @ prefix from nametag before validation", () => {
+    expect(resolveUniclawConfig({ nametag: "@alice" }).nametag).toBe("alice");
+  });
+
+  it("strips owner with invalid nametag format", () => {
+    expect(resolveUniclawConfig({ owner: "1bad" }).owner).toBeUndefined();
+    expect(resolveUniclawConfig({ owner: "bad@!" }).owner).toBeUndefined();
+  });
 });

@@ -28,11 +28,14 @@ export const listPaymentRequestsTool = {
   }),
   async execute(
     _toolCallId: string,
-    params: { direction?: string; status?: string },
+    params: {
+      direction?: "incoming" | "outgoing" | "all";
+      status?: "pending" | "accepted" | "rejected" | "paid" | "expired";
+    },
   ) {
     const sphere = getSphere();
     const direction = params.direction ?? "all";
-    const statusFilter = params.status as any;
+    const statusFilter = params.status;
     const sections: string[] = [];
 
     if (direction === "incoming" || direction === "all") {

@@ -27,7 +27,7 @@ const mockFetch = vi.fn();
 vi.stubGlobal("fetch", mockFetch);
 
 // Dynamic import so mocks are in place
-const { initSphere, getSphere, getSphereOrNull, destroySphere, MNEMONIC_PATH } =
+const { initSphere, getSphere, getSphereOrNull, destroySphere, waitForSphere, MNEMONIC_PATH } =
   await import("../src/sphere.js");
 
 describe("sphere", () => {
@@ -277,5 +277,21 @@ describe("sphere", () => {
     await destroySphere();
     expect(getSphereOrNull()).toBeNull();
     expect(mockDestroy).toHaveBeenCalledOnce();
+  });
+
+  it("waitForSphere rejects after timeout if sphere never initializes", async () => {
+    // Do not call initSphere — sphere stays uninitialized
+    await expect(waitForSphere(50)).rejects.toThrow("timed out");
+  });
+
+  it("waitForSphere resolves immediately if sphere is already initialized", async () => {
+    mockSphereInit.mockResolvedValue({
+      sphere: fakeSphere,
+      created: false,
+    });
+
+    await initSphere({ network: "testnet" });
+    const result = await waitForSphere(50);
+    expect(result).toBe(fakeSphere);
   });
 });

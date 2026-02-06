@@ -20,11 +20,14 @@ export const listTokensTool = {
       ], { description: "Filter by token status" }),
     ),
   }),
-  async execute(_toolCallId: string, params: { coinId?: string; status?: string }) {
+  async execute(
+    _toolCallId: string,
+    params: { coinId?: string; status?: "pending" | "confirmed" | "transferring" | "spent" | "invalid" },
+  ) {
     const sphere = getSphere();
     const tokens = sphere.payments.getTokens({
       coinId: params.coinId,
-      status: params.status as any,
+      status: params.status,
     });
 
     if (tokens.length === 0) {

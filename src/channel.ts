@@ -5,6 +5,7 @@ import type { PluginRuntime, ChannelOnboardingAdapter } from "openclaw/plugin-sd
 import { waitForSphere, walletExists } from "./sphere.js";
 import { runInteractiveSetup } from "./setup.js";
 import { getCoinDecimals, toHumanReadable } from "./assets.js";
+import { VALID_RECIPIENT } from "./validation.js";
 
 const DEFAULT_ACCOUNT_ID = "default";
 
@@ -393,11 +394,7 @@ export const uniclawChannelPlugin = {
   messaging: {
     normalizeTarget: (target: string) => target.replace(/^@/, "").trim(),
     targetResolver: {
-      looksLikeId: (input: string) => {
-        const trimmed = input.trim();
-        // Nametag or hex pubkey
-        return /^@?\w[\w-]{0,31}$/.test(trimmed) || /^[0-9a-fA-F]{64}$/.test(trimmed);
-      },
+      looksLikeId: (input: string) => VALID_RECIPIENT.test(input.trim()),
       hint: "<@nametag|hex pubkey>",
     },
   },

@@ -55,12 +55,40 @@ describe("uniclawChannelPlugin shape", () => {
     expect(uniclawChannelPlugin.messaging.normalizeTarget("bob")).toBe("bob");
   });
 
-  it("has security adapter", () => {
+  it("has security adapter defaulting to open policy", () => {
     const policy = uniclawChannelPlugin.security.resolveDmPolicy({
       account: { config: {} } as ResolvedUnicityAccount,
     });
     expect(policy.policy).toBe("open");
     expect(policy.allowFromPath).toBe("channels.uniclaw.allowFrom");
+  });
+
+  it("resolves allowlist policy with allowFrom list", () => {
+    const policy = uniclawChannelPlugin.security.resolveDmPolicy({
+      account: {
+        config: { dmPolicy: "allowlist", allowFrom: ["@alice", "deadbeef"] },
+      } as ResolvedUnicityAccount,
+    });
+    expect(policy.policy).toBe("allowlist");
+    expect(policy.allowFrom).toEqual(["@alice", "deadbeef"]);
+  });
+
+  it("resolves disabled policy", () => {
+    const policy = uniclawChannelPlugin.security.resolveDmPolicy({
+      account: {
+        config: { dmPolicy: "disabled" },
+      } as ResolvedUnicityAccount,
+    });
+    expect(policy.policy).toBe("disabled");
+  });
+
+  it("resolves pairing policy", () => {
+    const policy = uniclawChannelPlugin.security.resolveDmPolicy({
+      account: {
+        config: { dmPolicy: "pairing" },
+      } as ResolvedUnicityAccount,
+    });
+    expect(policy.policy).toBe("pairing");
   });
 });
 
@@ -371,5 +399,100 @@ describe("gateway.startAccount", () => {
     expect(unsub).not.toHaveBeenCalled();
     abortController.abort();
     expect(unsub).toHaveBeenCalledOnce();
+  });
+
+  it("handles incoming transfer event and creates correct inbound context", async () => {
+    let transferHandler: ((t: any) => void) | null = null;
+    mockSphere.on.mockImplementation((event: string, handler: any) => {
+      if (event === "transfer:incoming") transferHandler = handler;
+      return vi.fn();
+    });
+
+    await uniclawChannelPlugin.gateway.startAccount(mockCtx);
+
+    expect(transferHandler).not.toBeNull();
+
+    transferHandler!({
+      id: "transfer-1",
+      senderPubkey: "abc123def456",
+      senderNametag: "alice",
+      tokens: [{ coinId: "unicity", symbol: "UCT", amount: "1000000000000000000" }],
+      memo: "for lunch",
+    });
+
+    await vi.waitFor(() => {
+      expect(mockRuntime.channel.reply.finalizeInboundContext).toHaveBeenCalledTimes(1);
+    });
+
+    const ctx = mockRuntime.channel.reply.finalizeInboundContext.mock.calls[0][0];
+    expect(ctx.Body).toContain("[Payment received]");
+    expect(ctx.Body).toContain("from @alice");
+    expect(ctx.Body).toContain("for lunch");
+    expect(ctx.SessionKey).toBe("uniclaw:transfer:transfer-1");
+    expect(ctx.IsOwner).toBe(false);
+    expect(ctx.CommandAuthorized).toBe(false);
+  });
+
+  it("handles incoming payment request event", async () => {
+    let payreqHandler: ((r: any) => void) | null = null;
+    mockSphere.on.mockImplementation((event: string, handler: any) => {
+      if (event === "payment_request:incoming") payreqHandler = handler;
+      return vi.fn();
+    });
+
+    await uniclawChannelPlugin.gateway.startAccount(mockCtx);
+
+    expect(payreqHandler).not.toBeNull();
+
+    payreqHandler!({
+      requestId: "req-42",
+      senderPubkey: "deadbeef1234",
+      senderNametag: "bob",
+      coinId: "unicity",
+      symbol: "UCT",
+      amount: "5000000000000000000",
+      message: "pay me back",
+    });
+
+    await vi.waitFor(() => {
+      expect(mockRuntime.channel.reply.finalizeInboundContext).toHaveBeenCalledTimes(1);
+    });
+
+    const ctx = mockRuntime.channel.reply.finalizeInboundContext.mock.calls[0][0];
+    expect(ctx.Body).toContain("[Payment request]");
+    expect(ctx.Body).toContain("@bob");
+    expect(ctx.Body).toContain("pay me back");
+    expect(ctx.Body).toContain("req-42");
+    expect(ctx.SessionKey).toBe("uniclaw:payreq:req-42");
+    expect(ctx.IsOwner).toBe(false);
+    expect(ctx.CommandAuthorized).toBe(false);
+  });
+
+  it("unsubscribes all listeners (DM, transfer, payreq) on abort", async () => {
+    const abortController = new AbortController();
+    mockCtx.abortSignal = abortController.signal;
+
+    const unsubDm = vi.fn();
+    const unsubTransfer = vi.fn();
+    const unsubPayreq = vi.fn();
+
+    mockSphere.communications.onDirectMessage.mockReturnValue(unsubDm);
+    mockSphere.on.mockImplementation((event: string) => {
+      if (event === "transfer:incoming") return unsubTransfer;
+      if (event === "payment_request:incoming") return unsubPayreq;
+      return vi.fn();
+    });
+
+    await uniclawChannelPlugin.gateway.startAccount(mockCtx);
+
+    expect(unsubDm).not.toHaveBeenCalled();
+    expect(unsubTransfer).not.toHaveBeenCalled();
+    expect(unsubPayreq).not.toHaveBeenCalled();
+
+    abortController.abort();
+
+    expect(unsubDm).toHaveBeenCalledOnce();
+    expect(unsubTransfer).toHaveBeenCalledOnce();
+    expect(unsubPayreq).toHaveBeenCalledOnce();
   });
 });
