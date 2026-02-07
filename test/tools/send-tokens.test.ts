@@ -5,6 +5,7 @@ const mockGetSphere = vi.fn();
 const mockResolveCoinId = vi.fn();
 const mockGetCoinSymbol = vi.fn();
 const mockGetCoinDecimals = vi.fn();
+const mockGetSdkCoinId = vi.fn();
 const mockToSmallestUnit = vi.fn();
 
 vi.mock("../../src/sphere.js", () => ({
@@ -15,6 +16,7 @@ vi.mock("../../src/assets.js", () => ({
   resolveCoinId: (input: string) => mockResolveCoinId(input),
   getCoinSymbol: (name: string) => mockGetCoinSymbol(name),
   getCoinDecimals: (name: string) => mockGetCoinDecimals(name),
+  getCoinId: (name: string) => mockGetSdkCoinId(name),
   toSmallestUnit: (amount: number | string, decimals: number) => mockToSmallestUnit(amount, decimals),
 }));
 
@@ -29,6 +31,7 @@ describe("sendTokensTool", () => {
     mockResolveCoinId.mockReturnValue("unicity");
     mockGetCoinSymbol.mockReturnValue("UCT");
     mockGetCoinDecimals.mockReturnValue(18);
+    mockGetSdkCoinId.mockReturnValue("455ad8720656b08e8dbd5bac1f3c73eeea5431565f6c1c3af742b1aa12d41d89");
     mockToSmallestUnit.mockReturnValue("100000000000000000000");
   });
 
@@ -53,7 +56,7 @@ describe("sendTokensTool", () => {
     expect(mockSend).toHaveBeenCalledWith({
       recipient: "@alice",
       amount: "100000000000000000000",
-      coinId: "unicity",
+      coinId: "455ad8720656b08e8dbd5bac1f3c73eeea5431565f6c1c3af742b1aa12d41d89",
       memo: "for the coffee",
     });
     expect(result.content[0].text).toContain("tx-123");
@@ -74,7 +77,7 @@ describe("sendTokensTool", () => {
     expect(mockSend).toHaveBeenCalledWith({
       recipient: hexKey,
       amount: "100000000000000000000",
-      coinId: "unicity",
+      coinId: "455ad8720656b08e8dbd5bac1f3c73eeea5431565f6c1c3af742b1aa12d41d89",
       memo: undefined,
     });
   });

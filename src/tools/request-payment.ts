@@ -2,7 +2,7 @@
 
 import { Type } from "@sinclair/typebox";
 import { getSphere } from "../sphere.js";
-import { resolveCoinId, getCoinSymbol, getCoinDecimals, toSmallestUnit } from "../assets.js";
+import { resolveCoinId, getCoinSymbol, getCoinDecimals, getCoinId, toSmallestUnit } from "../assets.js";
 import { validateRecipient } from "../validation.js";
 
 export const requestPaymentTool = {
@@ -31,6 +31,11 @@ export const requestPaymentTool = {
       throw new Error(`Unknown coin "${params.coin}".`);
     }
 
+    const sdkCoinId = getCoinId(coinId);
+    if (!sdkCoinId) {
+      throw new Error(`No coin ID found for "${params.coin}".`);
+    }
+
     const decimals = getCoinDecimals(coinId) ?? 0;
     const amountSmallest = toSmallestUnit(params.amount, decimals);
     const symbol = getCoinSymbol(coinId);
@@ -39,7 +44,7 @@ export const requestPaymentTool = {
 
     const result = await sphere.payments.sendPaymentRequest(recipient, {
       amount: amountSmallest,
-      coinId,
+      coinId: sdkCoinId,
       message: params.message,
     });
 

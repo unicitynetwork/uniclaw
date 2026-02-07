@@ -18,13 +18,15 @@ interface AssetEntry {
 }
 
 interface AssetRegistry {
-  /** Map from lowercase name or symbol to faucet coin name */
+  /** Map from lowercase name, symbol, or coin id to coin name */
   aliases: Map<string, string>;
-  /** Map from faucet coin name to display symbol */
+  /** Map from coin name to symbol */
   symbols: Map<string, string>;
-  /** Map from faucet coin name to decimals */
+  /** Map from coin name to decimals */
   decimals: Map<string, number>;
-  /** List of all available symbols for display */
+  /** Map from coin name to coin id */
+  coinIds: Map<string, string>;
+  /** List of all available symbols */
   availableSymbols: string[];
 }
 
@@ -40,6 +42,7 @@ function loadRegistry(): AssetRegistry {
   const aliases = new Map<string, string>();
   const symbols = new Map<string, string>();
   const decimals = new Map<string, number>();
+  const coinIds = new Map<string, string>();
   const availableSymbols: string[] = [];
 
   for (const entry of entries) {
@@ -50,13 +53,14 @@ function loadRegistry(): AssetRegistry {
     const name = entry.name;
     const symbol = entry.symbol;
 
-    // Map name, symbol (lowercase), and coin id to the faucet coin name
+    // Map name, symbol (lowercase), and coin id to the coin name
     aliases.set(name.toLowerCase(), name);
     aliases.set(symbol.toLowerCase(), name);
     aliases.set(entry.id, name);
 
-    // Store display symbol and decimals
+    // Store symbol, decimals, and coin id
     symbols.set(name, symbol);
+    coinIds.set(name, entry.id);
     if (entry.decimals !== undefined) {
       decimals.set(name, entry.decimals);
     }
@@ -64,17 +68,17 @@ function loadRegistry(): AssetRegistry {
     availableSymbols.push(symbol);
   }
 
-  cachedRegistry = { aliases, symbols, decimals, availableSymbols };
+  cachedRegistry = { aliases, symbols, decimals, coinIds, availableSymbols };
   return cachedRegistry;
 }
 
-/** Resolve user input (name or symbol) to faucet coin name, or null if not found */
+/** Resolve user input (name or symbol) to coin name, or null if not found */
 export function resolveCoinId(input: string): string | null {
   const registry = loadRegistry();
   return registry.aliases.get(input.toLowerCase().trim()) ?? null;
 }
 
-/** Get display symbol for a coin (accepts name, symbol, or coin id) */
+/** Get symbol for a coin (accepts name, symbol, or coin id) */
 export function getCoinSymbol(coin: string): string {
   const registry = loadRegistry();
   const name = registry.aliases.get(coin) ?? registry.aliases.get(coin.toLowerCase()) ?? coin;
@@ -86,6 +90,13 @@ export function getCoinDecimals(coin: string): number | undefined {
   const registry = loadRegistry();
   const name = registry.aliases.get(coin) ?? registry.aliases.get(coin.toLowerCase());
   return name ? registry.decimals.get(name) : registry.decimals.get(coin);
+}
+
+/** Get coin id for a coin (accepts name, symbol, or coin id) */
+export function getCoinId(coin: string): string | undefined {
+  const registry = loadRegistry();
+  const name = registry.aliases.get(coin) ?? registry.aliases.get(coin.toLowerCase());
+  return name ? registry.coinIds.get(name) : registry.coinIds.get(coin);
 }
 
 /** Get list of all available symbols for display */
@@ -133,7 +144,7 @@ export function toHumanReadable(amount: string, decimals: number): string {
 /**
  * Format amount for display with symbol
  * @param amount Amount in smallest units
- * @param coinName Faucet coin name (e.g., "unicity")
+ * @param coinName Coin name (e.g., "unicity")
  */
 export function formatAmount(amount: string, coinName: string): string {
   const decimals = getCoinDecimals(coinName) ?? 0;
@@ -145,7 +156,7 @@ export function formatAmount(amount: string, coinName: string): string {
 /**
  * Parse user input amount to smallest units for a given coin
  * @param amount Human-readable amount (e.g., "100" or "1.5")
- * @param coinName Faucet coin name (e.g., "unicity")
+ * @param coinName Coin name (e.g., "unicity")
  */
 export function parseAmount(amount: number | string, coinName: string): string {
   const decimals = getCoinDecimals(coinName) ?? 0;
