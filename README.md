@@ -34,6 +34,12 @@
 openclaw plugins install @unicitylabs/uniclaw
 ```
 
+To update to the latest version later:
+
+```bash
+openclaw plugins update uniclaw
+```
+
 ### 2. Run interactive setup
 
 ```bash
