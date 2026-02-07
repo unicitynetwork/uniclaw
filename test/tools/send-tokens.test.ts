@@ -51,7 +51,7 @@ describe("sendTokensTool", () => {
     expect(mockResolveCoinId).toHaveBeenCalledWith("UCT");
     expect(mockToSmallestUnit).toHaveBeenCalledWith(100, 18);
     expect(mockSend).toHaveBeenCalledWith({
-      recipient: "alice",
+      recipient: "@alice",
       amount: "100000000000000000000",
       coinId: "unicity",
       memo: "for the coffee",

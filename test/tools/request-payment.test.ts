@@ -49,7 +49,7 @@ describe("requestPaymentTool", () => {
 
     expect(mockResolveCoinId).toHaveBeenCalledWith("UCT");
     expect(mockToSmallestUnit).toHaveBeenCalledWith(50, 18);
-    expect(mockSendPaymentRequest).toHaveBeenCalledWith("alice", {
+    expect(mockSendPaymentRequest).toHaveBeenCalledWith("@alice", {
       amount: "50000000000000000000",
       coinId: "unicity",
       message: "for the couch",

@@ -10,7 +10,7 @@ export const sendTokensTool = {
   description:
     "Send tokens to a recipient by nametag or public key. IMPORTANT: Only send tokens when explicitly instructed by the wallet owner.",
   parameters: Type.Object({
-    recipient: Type.String({ description: "Nametag (e.g. @alice) or 64-char hex public key" }),
+    recipient: Type.String({ description: "Nametag (e.g. @alice), hex public key (64 or 66 chars), or PROXY:/DIRECT: address" }),
     amount: Type.Number({ description: "Amount to send (human-readable, e.g. 100 or 1.5)" }),
     coin: Type.String({ description: "Coin to send by name or symbol (e.g. UCT, BTC)" }),
     memo: Type.Optional(Type.String({ description: "Optional memo to attach to the transfer" })),
@@ -36,10 +36,9 @@ export const sendTokensTool = {
     const symbol = getCoinSymbol(coinId);
 
     const sphere = getSphere();
-    const normalized = recipient.replace(/^@/, "");
 
     const result = await sphere.payments.send({
-      recipient: normalized,
+      recipient,
       amount: amountSmallest,
       coinId,
       memo: params.memo,

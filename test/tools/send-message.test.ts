@@ -30,7 +30,7 @@ describe("sendMessageTool", () => {
       message: "Hello Alice!",
     });
 
-    expect(mockSendDM).toHaveBeenCalledWith("alice", "Hello Alice!");
+    expect(mockSendDM).toHaveBeenCalledWith("@alice", "Hello Alice!");
     expect(result.content[0].text).toContain("@alice");
     expect(result.content[0].text).toContain("dm-42");
   });

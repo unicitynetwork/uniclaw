@@ -9,15 +9,14 @@ export const sendMessageTool = {
   description:
     "Send a direct message to a Unicity/Nostr user. The recipient can be a nametag (e.g. @alice) or a hex public key.",
   parameters: Type.Object({
-    recipient: Type.String({ description: "Nametag or public key of the recipient" }),
+    recipient: Type.String({ description: "Nametag (e.g. @alice), hex public key (64 or 66 chars), or PROXY:/DIRECT: address" }),
     message: Type.String({ description: "Message text to send" }),
   }),
   async execute(_toolCallId: string, params: { recipient: string; message: string }) {
     const recipient = params.recipient.trim();
     validateRecipient(recipient);
     const sphere = getSphere();
-    const normalized = recipient.replace(/^@/, "");
-    const dm = await sphere.communications.sendDM(normalized, params.message);
+    const dm = await sphere.communications.sendDM(recipient, params.message);
     return {
       content: [
         {
