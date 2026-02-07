@@ -2,7 +2,7 @@
 
 import { Type } from "@sinclair/typebox";
 import { getSphere } from "../sphere.js";
-import { toHumanReadable } from "../assets.js";
+import { getCoinDecimals, toHumanReadable } from "../assets.js";
 
 export const getBalanceTool = {
   name: "uniclaw_get_balance",
@@ -22,7 +22,8 @@ export const getBalanceTool = {
     }
 
     const lines = balances.map((b) => {
-      const amount = toHumanReadable(b.totalAmount, b.decimals);
+      const decimals = getCoinDecimals(b.coinId) ?? b.decimals;
+      const amount = toHumanReadable(b.totalAmount, decimals);
       return `${b.name} (${b.symbol}): ${amount} (${b.tokenCount} token${b.tokenCount !== 1 ? "s" : ""})`;
     });
 

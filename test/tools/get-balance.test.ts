@@ -3,12 +3,14 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const mockGetBalance = vi.fn();
 const mockGetSphere = vi.fn();
 const mockToHumanReadable = vi.fn();
+const mockGetCoinDecimals = vi.fn();
 
 vi.mock("../../src/sphere.js", () => ({
   getSphere: () => mockGetSphere(),
 }));
 
 vi.mock("../../src/assets.js", () => ({
+  getCoinDecimals: (coin: string) => mockGetCoinDecimals(coin),
   toHumanReadable: (amount: string, decimals: number) => mockToHumanReadable(amount, decimals),
 }));
 
@@ -56,6 +58,29 @@ describe("getBalanceTool", () => {
 
     const result = await getBalanceTool.execute("call-3", {});
     expect(result.content[0].text).toContain("no tokens");
+  });
+
+  it("uses asset registry decimals over SDK decimals", async () => {
+    mockGetCoinDecimals.mockReturnValue(18);
+    mockGetBalance.mockReturnValue([
+      { coinId: "455ad8...", symbol: "UCT", name: "unicity", totalAmount: "10000000000000000000", tokenCount: 1, decimals: 8 },
+    ]);
+
+    await getBalanceTool.execute("call-dec", {});
+
+    // Should call toHumanReadable with registry decimals (18), not SDK decimals (8)
+    expect(mockToHumanReadable).toHaveBeenCalledWith("10000000000000000000", 18);
+  });
+
+  it("falls back to SDK decimals when registry has no entry", async () => {
+    mockGetCoinDecimals.mockReturnValue(undefined);
+    mockGetBalance.mockReturnValue([
+      { coinId: "unknown", symbol: "???", name: "unknown", totalAmount: "100", tokenCount: 1, decimals: 6 },
+    ]);
+
+    await getBalanceTool.execute("call-fb", {});
+
+    expect(mockToHumanReadable).toHaveBeenCalledWith("100", 6);
   });
 
   it("returns coin-specific empty message when coinId provided", async () => {
