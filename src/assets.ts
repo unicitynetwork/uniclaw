@@ -74,16 +74,18 @@ export function resolveCoinId(input: string): string | null {
   return registry.aliases.get(input.toLowerCase().trim()) ?? null;
 }
 
-/** Get display symbol for a faucet coin name */
-export function getCoinSymbol(coinName: string): string {
+/** Get display symbol for a coin (accepts name, symbol, or coin id) */
+export function getCoinSymbol(coin: string): string {
   const registry = loadRegistry();
-  return registry.symbols.get(coinName) ?? coinName.toUpperCase();
+  const name = registry.aliases.get(coin) ?? registry.aliases.get(coin.toLowerCase()) ?? coin;
+  return registry.symbols.get(name) ?? coin.toUpperCase();
 }
 
-/** Get decimals for a faucet coin name */
-export function getCoinDecimals(coinName: string): number | undefined {
+/** Get decimals for a coin (accepts name, symbol, or coin id) */
+export function getCoinDecimals(coin: string): number | undefined {
   const registry = loadRegistry();
-  return registry.decimals.get(coinName);
+  const name = registry.aliases.get(coin) ?? registry.aliases.get(coin.toLowerCase());
+  return name ? registry.decimals.get(name) : registry.decimals.get(coin);
 }
 
 /** Get list of all available symbols for display */
